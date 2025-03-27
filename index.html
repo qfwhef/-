@@ -5,7 +5,7 @@
 <meta name="keywords" content="扫雷, HTML游戏">
 <meta name="description" content="本网页游戏为经典扫雷游戏，并略作改进，在电脑或手机上打开网页就可以玩，无需下载安装。增加了满屏级别，自适应屏幕大小。成绩榜实时显示大家的扫雷成绩。">
 <link rel="icon" href="images/微信截图_20250327223546.png" type="image/png">
-<title>扫雷yx</title>
+<title>扫雷</title>
 
 <style>
 input{height:1.5rem;font-size:1.1rem;width:4rem; border-radius: 4px; border: 1px solid #ccc; transition: all 0.3s;}
@@ -76,6 +76,114 @@ table{
 .title-container b {
     margin: 0 5px;
 }
+
+.win-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 2px solid #4a76a8;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-align: center;
+    max-width: 90%;
+    width: 320px;
+    animation: popup-fade 0.5s ease-in-out;
+}
+
+.win-popup h2 {
+    color: #4CAF50;
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+.win-popup p {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.win-popup button {
+    background-color: #4a76a8;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.win-popup button:hover {
+    background-color: #3a5b85;
+    transform: translateY(-2px);
+}
+
+@keyframes popup-fade {
+    0% { opacity: 0; transform: translate(-50%, -60%); }
+    100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.win-popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+}
+
+.fail-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 2px solid #e74c3c;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-align: center;
+    max-width: 90%;
+    width: 320px;
+    animation: popup-fade 0.5s ease-in-out;
+}
+
+.fail-popup h2 {
+    color: #e74c3c;
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+.fail-popup p {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.fail-popup button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.fail-popup button:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
 </style>
 <base target="_top">
 </head>  
@@ -85,9 +193,7 @@ table{
 <center>
 
 <div class="title-container">
-    <img src="images/微信截图_20250327223546.png" alt="扫雷图标">
     <b>扫雷</b>
-    <img src="images/微信截图_20250327223546.png" alt="扫雷图标">
 </div>
 
 <div style="margin-top:0.8rem;">
@@ -128,6 +234,11 @@ table{
 	<tr><td align="right"></td></tr>
 </table>
 
+<!-- 游戏胜利统计区域 -->
+<div style="margin-top:1rem; padding: 8px 12px; background: #f0f0f0; border-radius: 6px; display: inline-block;">
+  <p style="margin: 0; font-size: 1rem;">网站总计已取得 <span id="total-wins" style="font-weight: bold; color: #4a76a8;">加载中...</span> 次胜利</p>
+</div>
+
 <div style="margin-top:2rem;"></div>
 
 <div style="width:90%;text-align:left;margin-top:3rem;">
@@ -149,6 +260,236 @@ table{
 <script src="static/js/gfs.js"></script>
 <script src="static/js/ms3.5.js"></script>
 <script src="static/js/zz4.js"></script>
+
+<div id="win-popup-overlay" class="win-popup-overlay"></div>
+<div id="win-popup" class="win-popup">
+    <h2>恭喜，你赢了！</h2>
+    <p>点击笑脸或者选择难度即可开始新游戏</p>
+    <button onclick="closeWinPopup()">关闭</button>
+</div>
+
+<div id="fail-popup" class="fail-popup">
+    <h2>很遗憾，踩雷了！</h2>
+    <p>点击笑脸或者选择难度即可重新开始游戏</p>
+    <button onclick="closeFailPopup()">关闭</button>
+</div>
+
+<script>
+// 等待页面和游戏脚本完全加载
+window.addEventListener('load', function() {
+    // 定义全局变量
+    var winPopupShown = false;
+    var failPopupShown = false;
+    var gameFinished = false; // 标记游戏是否结束
+    var originalF17 = null;
+    var originalUp = null;
+    var checkInterval = null;
+    
+    // 检测游戏状态的函数
+    function checkGameStatus() {
+        // 如果游戏已结束且弹窗已关闭，停止检测
+        if (gameFinished && !winPopupShown && !failPopupShown) {
+            clearInterval(checkInterval);
+            return;
+        }
+        
+        // 检查游戏状态
+        if (typeof window['_gs'] !== 'undefined') {
+            // _gs = 1 表示胜利, _gs = 2 表示失败
+            if (window['_gs'] === 1 && !winPopupShown && !failPopupShown && !gameFinished) {
+                gameFinished = true;
+                showWinPopup();
+                return;
+            } else if (window['_gs'] === 2 && !failPopupShown && !winPopupShown && !gameFinished) {
+                gameFinished = true;
+                showFailPopup();
+                return;
+            }
+        }
+        
+        // 检查剩余方块数量是否为0（胜利条件）
+        if (typeof window['RB'] !== 'undefined' && window['RB'] === 0 && 
+            !winPopupShown && !failPopupShown && typeof window['_gs'] !== 'undefined' && window['_gs'] !== 2 && !gameFinished) {
+            gameFinished = true;
+            showWinPopup();
+            return;
+        }
+    }
+    
+    // 开始游戏状态检测
+    function startGameCheck() {
+        gameFinished = false;
+        clearInterval(checkInterval); // 清除之前的定时器
+        checkInterval = setInterval(checkGameStatus, 300);
+    }
+    
+    // 初始启动检测
+    startGameCheck();
+    
+    // 显示胜利弹窗
+    function showWinPopup() {
+        winPopupShown = true;
+        failPopupShown = false; // 确保两个弹窗不会同时显示
+        document.getElementById('win-popup').style.display = 'block';
+        document.getElementById('win-popup-overlay').style.display = 'block';
+        
+        // 记录胜利并更新统计数据
+        recordWin();
+    }
+    
+    // 显示失败弹窗
+    function showFailPopup() {
+        failPopupShown = true;
+        winPopupShown = false; // 确保两个弹窗不会同时显示
+        document.getElementById('fail-popup').style.display = 'block';
+        document.getElementById('win-popup-overlay').style.display = 'block';
+    }
+    
+    // 关闭胜利弹窗
+    function closeWinPopup() {
+        document.getElementById('win-popup').style.display = 'none';
+        document.getElementById('win-popup-overlay').style.display = 'none';
+        winPopupShown = false;
+    }
+    
+    // 关闭失败弹窗
+    function closeFailPopup() {
+        document.getElementById('fail-popup').style.display = 'none';
+        document.getElementById('win-popup-overlay').style.display = 'none';
+        failPopupShown = false;
+    }
+    
+    // 记录胜利到服务器
+    function recordWin() {
+        fetch('/api/record-win')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateWinCount(data.total_wins);
+                }
+            })
+            .catch(err => {
+                console.error('记录胜利失败:', err);
+            });
+    }
+    
+    // 更新胜利计数显示
+    function updateWinCount(count) {
+        document.getElementById('total-wins').textContent = count;
+    }
+    
+    // 获取当前胜利统计
+    function fetchStats() {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                updateWinCount(data.total_wins);
+            })
+            .catch(err => {
+                console.error('获取统计数据失败:', err);
+                document.getElementById('total-wins').textContent = '获取失败';
+            });
+    }
+    
+    // 页面加载时获取统计信息
+    fetchStats();
+    
+    // 把弹窗关闭函数添加到全局作用域
+    window.closeWinPopup = closeWinPopup;
+    window.closeFailPopup = closeFailPopup;
+    
+    // 重置游戏
+    function resetGame() {
+        closeWinPopup();
+        closeFailPopup();
+        gameFinished = false;
+        startGameCheck();
+    }
+    
+    // 拦截胜利函数f17
+    if (typeof window.f17 === 'function') {
+        originalF17 = window.f17;
+        window.f17 = function() {
+            var result = originalF17.apply(this, arguments);
+            if (!gameFinished) {
+                gameFinished = true;
+                setTimeout(function() {
+                    if (!failPopupShown && !winPopupShown) showFailPopup();
+                }, 500);
+            }
+            return result;
+        };
+    }
+    
+    // 监听o0o函数，这个函数在打开方块时调用
+    if (typeof window.o0o === 'function') {
+        var originalO0o = window.o0o;
+        window.o0o = function(x, y) {
+            var result = originalO0o.apply(this, arguments);
+            
+            // 如果返回1，说明点到了雷，游戏结束
+            if (result === 1 && !gameFinished) {
+                gameFinished = true;
+                setTimeout(function() {
+                    if (!failPopupShown && !winPopupShown) showFailPopup();
+                }, 500);
+            }
+            
+            // 如果游戏胜利（RB === 0），游戏结束
+            if (typeof window['RB'] !== 'undefined' && window['RB'] === 0 && 
+                typeof window['_gs'] !== 'undefined' && window['_gs'] !== 2 && !gameFinished) {
+                gameFinished = true;
+                setTimeout(function() {
+                    if (!winPopupShown && !failPopupShown) showWinPopup();
+                }, 500);
+            }
+            
+            return result;
+        };
+    }
+    
+    // 重置游戏的函数，用于监听重置相关事件
+    if (typeof window._45 === 'function') {
+        var original_45 = window._45;
+        window._45 = function() {
+            var result = original_45.apply(this, arguments);
+            resetGame();
+            return result;
+        };
+    }
+    
+    // 点击笑脸重置游戏时重置弹窗状态
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'face') {
+            resetGame();
+        }
+    });
+    
+    // 点击弹窗背景关闭弹窗
+    document.getElementById('win-popup-overlay').addEventListener('click', function() {
+        closeWinPopup();
+        closeFailPopup();
+    });
+    
+    // 选择难度时重置弹窗状态
+    var difficultyLinks = document.querySelectorAll('a[href^="javascript:_123"]');
+    for(var i = 0; i < difficultyLinks.length; i++) {
+        difficultyLinks[i].addEventListener('click', function() {
+            resetGame();
+        });
+    }
+    
+    // 监听_123函数（选择难度）
+    if (typeof window._123 === 'function') {
+        var original_123 = window._123;
+        window._123 = function() {
+            var result = original_123.apply(this, arguments);
+            resetGame();
+            return result;
+        };
+    }
+});
+</script>
 
 </center>
 </div>
