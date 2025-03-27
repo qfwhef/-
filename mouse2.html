@@ -9,6 +9,42 @@
 body{background:#f7f7f0;}
 table{border-collapse:collapse;cursor:default;}
 #foo{border-top:solid 1px #cccccc;padding-top:2rem;margin-top:6rem;width:90%;text-align:center}
+
+.game-btn {
+	display: inline-block;
+	padding: 6px 12px;
+	margin: 0 5px;
+	font-weight: 500;
+	text-decoration: none;
+	background-color: #4a76a8;
+	color: white;
+	border-radius: 4px;
+	transition: all 0.3s;
+}
+.game-btn:hover {
+	background-color: #3a5b85;
+	transform: translateY(-2px);
+}
+.game-btn:active {
+	transform: translateY(0);
+}
+
+input[type="radio"] {
+    margin-right: 5px;
+}
+
+input[type="radio"] + label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.radio-container {
+    margin: 10px 0;
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+}
 </style>
 
 
@@ -21,31 +57,27 @@ table{border-collapse:collapse;cursor:default;}
 
 
 
-[<a href="index.html">返回首页</a>]
+<a href="index.html" class="game-btn">返回首页</a>
 
 <center>
 
 <br><br>
 
 
-鼠标起效时间点
-<br>
+<h3>鼠标起效时间点</h3>
 <br>
 <br>
 <i>左键</i>
 <br>
 <br>
 
-
-<input type="radio" name="mp1" value="0" checked="" onclick="save('mp1',0);">点下
-<input type="radio" name="mp1" value="1" onclick="save('mp1',1);">松开
-<input type="radio" name="mp1" value="2" onclick="save('mp1',2);">两次
+<div class="radio-container">
+<input type="radio" id="mp1-0" name="mp1" value="0" checked="" onclick="save('mp1',0);"><label for="mp1-0">点下</label>
+<input type="radio" id="mp1-1" name="mp1" value="1" onclick="save('mp1',1);"><label for="mp1-1">松开</label>
+<input type="radio" id="mp1-2" name="mp1" value="2" onclick="save('mp1',2);"><label for="mp1-2">两次</label>
+</div>
 <br>
 <br>
-
-
-
-
 
 <br>
 <br>
@@ -54,16 +86,17 @@ table{border-collapse:collapse;cursor:default;}
 <br>
 <br>
 
-
-<input type="radio" name="mp2" value="0" checked="" onclick="save('mp2',0);">点下
-<input type="radio" name="mp2" value="1" onclick="save('mp2',1);">松开
-<input type="radio" name="mp2" value="2" onclick="save('mp2',2);">两次
+<div class="radio-container">
+<input type="radio" id="mp2-0" name="mp2" value="0" checked="" onclick="save('mp2',0);"><label for="mp2-0">点下</label>
+<input type="radio" id="mp2-1" name="mp2" value="1" onclick="save('mp2',1);"><label for="mp2-1">松开</label>
+<input type="radio" id="mp2-2" name="mp2" value="2" onclick="save('mp2',2);"><label for="mp2-2">两次</label>
+</div>
 <br>
 <br>
 <br>
 <br>
 <br>
-<small>“两次”：点下和松开在不同的格子上</small>
+<small>"两次"：点下和松开在不同的格子上</small>
 
 
 <script>
@@ -105,13 +138,6 @@ load("mp2");
 </script>
 
 
-
-
-
-
-<div id="foo">
-在线扫雷游戏
-</div>
 
 </center>
 <br><br>
